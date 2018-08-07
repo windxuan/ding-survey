@@ -1,0 +1,124 @@
+@blue: #25C6FC;
+@bc: #F8F8F8;
+@fc: #333;
+
+// 背景图片地址和大小
+.bis (@url) { 
+	background-image: url(@url);
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+}
+
+.border-radius (@radius) {
+  -webkit-border-radius: @radius;
+  -moz-border-radius: @radius;
+  -ms-border-radius: @radius;
+  -o-border-radius: @radius;
+  border-radius: @radius;
+}
+
+//定位全屏
+.allcover () {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+//定位上下左右居中
+.center () {  
+	position: absolute;
+	top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+//定位上下居中
+.ct () {  
+	position: absolute;
+	top: 50%;
+  transform: translateY(-50%);
+}
+
+//定位上下居中
+.cl () {  
+	position: absolute;
+	left: 50%;
+  transform: translateX(-50%);
+}
+
+//宽高
+.wh (@width, @height){
+	width: @width;
+	height: @height;
+}
+
+//字体大小、行高、字体
+.font(@size, @line-height, @family: 'Microsoft YaHei') {  
+	font: @size/@line-height @family;
+}
+
+//字体大小，颜色
+.sc(@size, @color){
+	font-size: @size;
+	color: @color;
+}
+
+//flex 布局和 子元素 对其方式
+.fj(@type: space-between){
+	display: flex;
+	justify-content: @type;
+}
+
+// 水平
+.margin(x, @left: 5px, @right: @left) {
+  margin-left: @left;
+  margin-right: @right;
+}
+.padding(x, @left: 5px, @right: @left) {
+  padding-left: @left;
+  padding-right: @right;
+}
+
+// 垂直
+.margin(y, @top: 5px, @bottom: @top) {
+  margin-top: @top;
+  margin-bottom: @bottom;
+}
+.padding(y, @top: 5px, @bottom: @top) {
+  padding-top: @top;
+  padding-bottom: @bottom;
+}
+
+// input提示文字颜色
+.pc(@color: #CCC) {
+  &::-webkit-input-placeholder,
+  &::-moz-placeholder, 
+  &:-ms-input-placeholder,
+  &:-moz-placeholder {
+    color: @color;
+  }
+}
+
+// 多行溢出
+.lines-omit(@row: 2) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: @row;
+  overflow: hidden;
+}
+
+// 阴影(水平偏移、垂直偏移、偏移距离、阴影颜色)
+.box-shadow(@x: 0, @y: @x, @blur: 0, @color: #000) {
+  box-shadow: @arguments;
+  -moz-box-shadow: @arguments;
+  -webkit-box-shadow: @arguments;
+}
+
+// 过渡(CSS属性,过渡时间 延迟 开始时间 )
+.transition(@css: all, @time: 2s, @delay: ease, @start: 0) {
+  transition: @arguments;
+  -webkit-transition: @arguments;
+  -moz-transition: @arguments;
+  -o-transition: @arguments;
+  -ms-transition: @arguments;
+}
