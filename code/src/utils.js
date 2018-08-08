@@ -12,6 +12,14 @@ const utils = {
   },
 
   /**
+   * 检测缓存
+   * @param {string} fields 缓存字段
+   */
+  hasCache(fields) {
+    return Object.prototype.hasOwnProperty.call(localStorage, fields);
+  },
+
+  /**
      * 设置缓存
      * @param {string} fields 缓存字段
      * @param {object} data   缓存对象

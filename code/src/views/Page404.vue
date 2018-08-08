@@ -1,19 +1,16 @@
 <template>
   <div class="negation">
-    <img src="../assets/font_notfound.png" alt="" width="680" height="280">
-    <div class="negation-txt">
-      页面飞去外太空啦
-      <br>
-          即将离开本页，
-          <i>{{secs}}</i>
-          秒后自动返回
-    </div>
-    <span><a @click="goPrev">立即返回</a></span>
+  <img src="../assets/font_notfound.png" alt="" width="680" height="280">
+  <div class="negation-txt">
+    页面飞去外太空啦
+    <br>
+    即将离开本页，<i>{{secs}}</i>秒后自动返回
   </div>
+  <span><a @click="goPrev">立即返回</a></span>
+</div>
 </template>
 
 <script>
-
 export default {
   name: 'Page404',
   data() {
@@ -41,7 +38,18 @@ export default {
 
 <style scoped lang="less">
 .negation {
-  position: relative;
+  height:100%;
+  width:100%;
+  max-height:100%;
+  position:absolute;
+  z-index:999;
+  left:0;
+  top:0;
+  background-image: url(../assets/backend_notfound.png);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  background-size: cover;
   img {
     position: absolute;
     top: 150px;

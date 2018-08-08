@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "dingtalk-jsapi": "^2.0.62",
     "echarts": "^4.1.0",
     "element-ui": "^2.4.5",
     "js-md5": "^0.7.3",

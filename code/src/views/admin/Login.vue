@@ -104,12 +104,8 @@ export default {
 body {
   color: #fff;
   font-weight: 300;
+  height: 100%;
   background-color: #fff;
-  background-image: url(../../assets/backend_notfound.png);
-  background-repeat:no-repeat;
-  background-position: center center;
-  background-attachment: fixed;
-  background-size: cover;
 }
 body ::-webkit-input-placeholder  {
   /* WebKit */
@@ -138,6 +134,18 @@ body :-ms-input-placeholder {
   font-weight: 300;
 }
 .login {
+    height:100%;
+    width:100%;
+    max-height:100%;
+    position:absolute;
+    z-index:20000;
+    left:0;
+    top:0;
+    background-image: url(../../assets/backend_notfound.png);
+    background-repeat:no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
   * {
     margin: 0;
     padding: 0;
@@ -166,7 +174,6 @@ body :-ms-input-placeholder {
     text-align: center;
   }
   .container h1 {
-    // border: 1px solid #000;
     font-size: 40px;
     -webkit-transition-duration: 1s;
             transition-duration: 1s;
@@ -198,7 +205,6 @@ body :-ms-input-placeholder {
     font-weight: 300;
   }
   input:hover {
-    // border: 1px solid #000;
     background-color: rgba(255, 255, 255, 0.4);
   }
   input:focus {
@@ -211,7 +217,6 @@ body :-ms-input-placeholder {
       -moz-appearance: none;
     outline: 0;
     background-color: #fff;
-    // border: 0;
     padding: 12px 15px;
     color: #53e3a6;
     border-radius: 3px;

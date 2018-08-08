@@ -7,7 +7,7 @@ const mock = 'https://easy-mock.com/mock/5b57ec7b9ddd1140ec2eb381/survey/api';
 axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? '/api/' : mock;
 
 // 是否使用模拟接口
-const useMock = false;
+const useMock = true;
 
 if (useMock) {
   axios.defaults.baseURL = mock;

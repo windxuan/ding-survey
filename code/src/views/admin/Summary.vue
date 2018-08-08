@@ -13,6 +13,7 @@
       @cell-mouse-leave="handleMouseOut" -->
     <el-table
       :data="tableData.slice((staffCurrentPage-1)*staffPageSize,staffCurrentPage*staffPageSize)"
+      v-loading="tableLoading"
       border
       style="height: 100%;margin-left: auto; margin-right: auto;text-align: center;"
       height="595"
@@ -189,6 +190,7 @@ export default {
       switchValue: true,
       disability: false,
       tableData: [],
+      tableLoading: true,
       staffPageSize: 8,
       staffCurrentPage: 1,
       staffTotalCount: 0,
@@ -209,6 +211,7 @@ export default {
   },
   methods: {
     getData() {
+      this.tableLoading = true;
       this.$http.get('summary', {
         headers: {
           Authorization: this.$store.state.token,
@@ -218,6 +221,7 @@ export default {
           if (response) {
             console.log(response);
             this.pushData(response);
+            this.tableLoading = false;
           }
         })
         .catch((error) => {
@@ -279,7 +283,7 @@ export default {
           if (this.scoreTagShow === true) {
             this.disability = false;
           }
-        }, 350);
+        }, 390);
       } else {
         this.scoreTagShow = false;
         setTimeout(() => {
@@ -287,7 +291,7 @@ export default {
           if (this.evalTagShow === true) {
             this.disability = false;
           }
-        }, 350);
+        }, 390);
       }
     },
     // handleMouseEnter(val) {
@@ -318,5 +322,14 @@ export default {
     // float: right;
     margin: 0 auto;
     // text-align: center;
+  }
+  .el-pagination {
+    margin-top: 20px;
+    // border: 1px solid #000;
+    white-space: nowrap;
+    padding: 2px 5px;
+    color: #303133;
+    font-weight: 700;
+    text-align: center;
   }
 </style>
