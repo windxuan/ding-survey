@@ -17,11 +17,11 @@ export default {
   name: 'RandarChart',
   data() {
     return {
-      summaryData: '',
+      // summaryData: '',
       option: {
         title: {
           left: 'center',
-          text: '个人能力展示',
+          // text: '个人能力展示',
         },
         radar: {
           triggerEvent: true,
@@ -48,7 +48,7 @@ export default {
             },
           },
           indicator: [],
-          radius: '50%',
+          radius: '60%',
           center: ['50%', '50%'], // 雷达图中心点的位置
         },
         series: [{
@@ -72,19 +72,17 @@ export default {
       },
     };
   },
+  props: ['summary'],
   mounted() {
-    // 从本地读取数据
-    this.summaryData = JSON.parse(this.$utils.getCache('summaryData'));
-    if (this.summaryData !== null) {
-      this.handleData();
-      this.initEcharts();
-    }
+    this.handleData();
+    this.initEcharts();
   },
   methods: {
     // 对获取的数据进行处理
     handleData() {
-      if (this.summaryData) {
-        this.summaryData[2].grades.forEach((ele) => {
+      console.log(this.summary);
+      if (this.summary) {
+        this.summary.grades.forEach((ele) => {
           this.option.radar.indicator.push({ name: ele.value, indicator: ele.score, max: 95 });
           this.option.series[0].data[0].value.push(ele.score);
         });

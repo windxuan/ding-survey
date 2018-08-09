@@ -38,6 +38,18 @@ const utils = {
   },
 
   /**
+   * 随机数生成
+   * @param {number} n 位数
+   */
+  randomSum(n) {
+    let rnd = '';
+    for (let i = 0; i < n; i++) {
+      rnd += Math.floor(Math.random() * 10);
+    }
+    return `${rnd}`;
+  },
+
+  /**
    * 分值标识颜色
    * @param {number} level
    */
@@ -188,6 +200,10 @@ const utils = {
       tableData.push({
         staffNo: data[i].staff.staffNo,
         staffName: data[i].staff.staffName,
+        mobile: data[i].staff.mobilephone,
+        surveyName: data[i].survey.surveyName,
+        surveyShow: data[i].survey.surveyShow,
+        surveyType: data[i].survey.surveyType,
         tags: data[i].tags,
         createTime: data[i].staff.createdTime,
         Number: i + 1,

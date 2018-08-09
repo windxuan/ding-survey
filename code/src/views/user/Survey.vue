@@ -1,8 +1,10 @@
 <template>
   <div class="survey swiper-container swiper-no-swiping" ref="swiper">
+    <!-- 答题说明组件 -->
+    <statement></statement>
     <div class="top-room">
-      <h2>{{surveyData[activeIndex].questionName}}</h2>
-      <div class="banner" @click="submitSurvey">我的分数是：{{ scoreSum }}分</div>
+      <h2>{{$utils.digitDX(activeIndex + 1) + '. ' + surveyData[activeIndex].questionName}}</h2>
+      <div class="banner">已分配的分数：{{ scoreSum }}分</div>
     </div>
     <!-- 主要答题界面内容 -->
     <div class="swiper-wrapper">
@@ -14,6 +16,8 @@
               <span class="center-title-two">{{v.optionName}}</span>
             </div>
             <mt-range
+              ref="ranges"
+              :disabled="disable"
               v-model="questions[index].options[i].score"
               :max="10"
               :step="1"
@@ -33,9 +37,9 @@
     <!-- 底部内容 -->
     <mt-tabbar fixed>
       <div class="botton">
-        <mt-button class="eida" @click="prev" @touchend="prev">上一题</mt-button>
-        <span>{{activeIndex + 1}} / 7 </span>
-        <mt-button class="eida" @click="next" @touchend="next">下一题</mt-button>
+        <mt-button :disabled="activeIndex === 0" class="eida" @touchend="prev" @click="prev">上一题</mt-button>
+        <span>{{ activeIndex + 1 }} / {{ surveyData.length }} </span>
+        <mt-button class="eida" @touchend="next" @click="next">下一题</mt-button>
       </div>
     </mt-tabbar>
   </div>
@@ -43,19 +47,24 @@
 
 <script>
 import Swiper from 'swiper';
+import { MessageBox, Toast, Indicator } from 'mint-ui';
+import statement from '../../components/Statement';
 
 export default {
   name: 'Survey',
+  components: { statement },
   data() {
     return {
+      disable: false,
       surveyData: [{ questionName: '' }],
       questions: [{ options: [{ score: 0 }] }],
       swiper: {},
       totalScore: 0,
+      once: true,
     };
   },
   created() {
-    // 检测问卷缓存
+    // 检测问卷题目缓存
     if (this.$utils.hasCache('survey')) {
       new Promise((success) => {
         const data = this.$utils.getCache('survey');
@@ -66,11 +75,22 @@ export default {
         this.surveyData = data;
         this.createOptions();
       }).then(() => {
-        this.swiper = new Swiper(this.$refs.swiper, { noSwiping: true });
+        this.initSwiper();
       });
     } else {
       this.sendSurvey();
     }
+    // 检测答题记录缓存
+    if (this.$utils.hasCache('options')) {
+      this.questions = this.$utils.getCache('options');
+    }
+  },
+  beforeRouteLeave(to, from, next) {
+    this.$utils.setCache('options', this.questions);
+    next();
+  },
+  destroyed() {
+    this.$utils.setCache('options', this.questions);
   },
   computed: {
     activeIndex() {
@@ -86,58 +106,113 @@ export default {
     },
   },
   methods: {
+    // 实例化 Swiper 组件
+    initSwiper() {
+      this.swiper = new Swiper(this.$refs.swiper, { noSwiping: true });
+    },
     // 获取问卷信息
     sendSurvey() {
       this.$http.get('survey')
         .then((result) => {
           this.surveyData = result.data.questions;
           this.createOptions();
+          this.initSwiper();
           this.$utils.setCache('survey', this.surveyData);
         })
         .then(() => {
-          this.swiper = new Swiper(this.$refs.swiper, { noSwiping: true });
+          this.initSwiper();
         })
         .catch((error) => {
           console.log(error);
         });
     },
-    // 生成答题参数项
+    // 生成答题记录信息
     createOptions() {
-      const arr = [];
-      this.surveyData.forEach((element) => {
-        const obj = {
-          id: element.id,
-          options: [],
-        };
-        element.options.forEach((el, i) => {
-          obj.options.push({
-            id: i + 1,
-            codeId: el.codeId,
-            score: 0,
+      if (this.$utils.hasCache('options')) {
+        this.questions = this.$utils.getCache('options');
+      } else {
+        const arr = [];
+        this.surveyData.forEach((element) => {
+          const item = {};
+          this.$set(item, 'id', element.id);
+          this.$set(item, 'options', []);
+          element.options.forEach((el, i) => {
+            const opts = {};
+            this.$set(opts, 'id', i + 1);
+            this.$set(opts, 'codeId', el.codeId);
+            this.$set(opts, 'score', 0);
+            item.options.push(opts);
           });
+          arr.push(item);
         });
-        arr.push(obj);
-      });
-      this.questions = JSON.parse(JSON.stringify(arr));
+        this.questions = arr;
+      }
     },
     prev() {
+      if (this.scoreSum === 10) {
+        this.$refs.ranges.slice(0, 10 * this.activeIndex + 9).disabled = true;
+      }
       this.swiper.slidePrev();
     },
     next() {
-      this.swiper.slideNext();
+      if (this.scoreSum !== 10) {
+        Toast({
+          message: '总分必须为10分哦',
+          className: 'score-tips',
+          position: 'center',
+          duration: 2000,
+        });
+      } else if (this.activeIndex === 0) {
+        if (this.once) {
+          MessageBox({
+            title: '提示',
+            message: '点击确定后，将无法修改',
+            showCancelButton: true,
+          }).then((msg) => {
+            if (msg === 'confirm') {
+              this.once = false;
+              this.swiper.slideNext();
+            }
+            return false;
+          });
+        } else {
+          this.swiper.slideNext();
+        }
+      } else if (this.activeIndex === this.surveyData.length - 1) {
+        MessageBox({
+          title: '提示',
+          message: '已答完,确定提交？',
+          showCancelButton: true,
+        }).then((msg) => {
+          if (msg === 'confirm') {
+            Indicator.open();
+            this.submitSurvey();
+          }
+          return false;
+        });
+      } else {
+        this.swiper.slideNext();
+      }
     },
     // 提交问卷
     submitSurvey() {
-      this.$http.post('survey', {
-        staff: {
-          staffName: '小彩蛋',
-          staffNo: '142536',
-          moblie: '12377778888',
-        },
-        questions: this.questions.map(val => val.options.filter(val => val.score > 0)),
-      })
+      const answer = {};
+      this.$set(answer, 'staff', {});
+      this.$set(answer, 'questions', this.questions);
+      this.$set(answer.staff, 'staffName', '小彩蛋');
+      this.$set(answer.staff, 'staffNo', this.$utils.randomSum(9));
+      this.$set(answer.staff, 'mobliePhone', '12377778888');
+      this.$http.post('survey', answer)
         .then((result) => {
           console.log(result);
+          this.$router.push({
+            name: 'verdict',
+            params: result.data,
+          });
+          Indicator.close();
+        })
+        .catch((error) => {
+          console.log(error);
         });
     },
   },
@@ -233,6 +308,7 @@ export default {
       top: 50%;
       left: 50%;
       transform: translateX(-50%) translateY(-50%);
+      font-size: 1.3rem;
     }
   }
   .banner{

@@ -1,7 +1,10 @@
 <template>
   <div class="summary">
-    <h2>汇总页</h2>
-    <el-button type="primary" @click="getData">刷新</el-button>
+    <div class="management">
+      <img src="../../assets/management.png" width="100%" height="100px" alt="">
+    </div>
+    <div class="realize">
+    <!-- 一键切换 -->
     <el-switch
       v-model="switchValue"
       @change="changeSwitch"
@@ -9,14 +12,30 @@
       inactive-text="分数"
       :disabled="disability">
     </el-switch>
+      <!-- 查询框 -->
+    <el-input placeholder="请输入内容" v-model="search.value" class="input-with-select">
+      <el-select
+        v-model="search.select"
+        slot="prepend">
+        <el-option
+          v-for="item in search.option"
+          :key="item.id"
+          :label="item.label"
+          :value="item.value">
+        </el-option>
+      </el-select>
+      <el-button slot="append" icon="el-icon-search" @click="searchData"></el-button>
+    </el-input>
+    <el-button class="refresh" type="primary" size="small" @click="refresh" :loading="refreshLoading">刷新</el-button>
       <!-- @cell-mouse-enter="handleMouseEnter"
       @cell-mouse-leave="handleMouseOut" -->
+    </div>
     <el-table
       :data="tableData.slice((staffCurrentPage-1)*staffPageSize,staffCurrentPage*staffPageSize)"
       v-loading="tableLoading"
       border
       style="height: 100%;margin-left: auto; margin-right: auto;text-align: center;"
-      height="595"
+      height="525"
       :default-sort = "{prop: 'date', order: 'descending'}"
       ref="mainTable">
       <!-- <el-table-column
@@ -161,18 +180,35 @@
       </el-table-column>
       <el-table-column
         label="详情"
-        prop="Number"
         header-align=center>
         <template slot-scope="scope">
-          <el-button @click="getData" width="40px">详情</el-button>
+          <el-button @click="getDetails(scope.row.Number)" width="40px">详情</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <el-dialog
+      title="详情"
+      :visible.sync="dialogVisible"
+      width="30%">
+      <span>员工编号：{{staffData.staffNo}}</span><br>
+      <span>手机号：{{staffData.mobile}}</span><br>
+      <span>总评：</span>
+      <el-tag v-for="tag in staffData.tags" v-bind:key="tag" style="width: 75px;text-align: center;">
+        {{tag}}
+      </el-tag><br>
+      <span>问卷名：{{staffData.surveyName}}</span><br>
+      <span>测试能力：{{staffData.surveyShow}}</span><br>
+      <span>测试类型：{{staffData.surveyType}}</span><br>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
     <el-pagination
+      background
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="staffCurrentPage"
-      :page-sizes="[8, 16, 32, 64]"
+      :page-sizes="[7 , 16, 32, staffTotalCount]"
       :page-size="staffPageSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="staffTotalCount">
@@ -191,11 +227,31 @@ export default {
       disability: false,
       tableData: [],
       tableLoading: true,
-      staffPageSize: 8,
+      staffPageSize: 7,
       staffCurrentPage: 1,
       staffTotalCount: 0,
       evalTagShow: true,
       scoreTagShow: false,
+      refreshLoading: false,
+      index: 1,
+      dialogVisible: false,
+      staffData: [],
+      // 查询条件
+      search: {
+        option: [
+          {
+            value: '1',
+            label: '姓名',
+          },
+          {
+            value: '2',
+            label: '标签',
+          },
+        ],
+        select: '1',
+        value: '',
+      },
+      tempData: [],
     };
   },
   computed: {
@@ -210,6 +266,10 @@ export default {
     }
   },
   methods: {
+    refresh() {
+      this.refreshLoading = true;
+      this.getData();
+    },
     getData() {
       this.tableLoading = true;
       this.$http.get('summary', {
@@ -222,18 +282,23 @@ export default {
             console.log(response);
             this.pushData(response);
             this.tableLoading = false;
+            this.refreshLoading = false;
           }
         })
         .catch((error) => {
           console.log(error);
-          if (error.response) {
+          if (error.response.data.message) {
             this.$message.error(error.response.data.message);
+          } else {
+            this.$message.error('服务器连接错误！');
+            this.refreshLoading = false;
           }
         });
     },
     pushData(data) {
       this.tableData.splice(0, this.tableData.length);
       this.tableData = this.$utils.manageData(data);
+      this.tempData = this.tableData;
       console.log(this.tableData);
       this.staffTotalCount = data.length;
     },
@@ -294,6 +359,15 @@ export default {
         }, 390);
       }
     },
+    getDetails(index) {
+      console.log(index);
+      this.dialogVisible = true;
+      this.index = index - 1;
+      this.staffData = this.tableData[this.index];
+    },
+    searchData() {
+      console.log(this.search.value);
+    },
     // handleMouseEnter(val) {
     //   console.log(val);
     // },
@@ -306,30 +380,66 @@ export default {
 </script>
 
 <style lang="less">
-  // .el-table__row:hover .evalTag{
-  //   display: none;
-  // }
-  // .scoreTag {
-  //   display: none;
-  // }
-  // .el-table__row:hover .scoreTag {
-  //   display: block;
-  // }
+  .management {
+    width: 100%;
+    height: 105px;
+    // border: 1px solid #000;
+    // max-height: 100%;
+    // position:absolute;
+    // z-index:20000;
+    // left:0;
+    // top:0;
+    // background-image: url(../../assets/management.png);
+    // background-repeat:no-repeat;
+    // background-position: center 0;
+    // background-attachment: fixed;
+  }
+  .refresh {
+    // border: 1px solid #000;
+    float: right;
+    margin-right: 50px;
+    margin-top: 5px;
+  }
+  .el-table td.iscenter, .el-table th.is-center {
+    background: #74cfd5;
+    color: #191a1b;
+  }
+  .el-switch {
+    // border: 1px solid #000;
+    height: 40px;
+    margin-left: 15px;
+  }
+  .el-pagination button, .el-pagination span:not([class*=suffix]) {
+    color: #fff;
+  }
+  .el-input-group {
+    margin-bottom: 5px;
+    margin-left: 20px;
+  }
+  .el-dialog__body {
+    line-height: 25px;
+  }
   .el-tag {
     width: 80%;
   }
   .scoreTag {
-    // float: right;
     margin: 0 auto;
-    // text-align: center;
   }
   .el-pagination {
     margin-top: 20px;
     // border: 1px solid #000;
+    line-height: 32px;
     white-space: nowrap;
-    padding: 2px 5px;
+    padding: 3px 5px;
     color: #303133;
     font-weight: 700;
     text-align: center;
+    background: #88dbe0;
+  }
+  .el-select .el-input {
+    width: 100px;
+  }
+  .input-with-select {
+    width: 400px;
   }
 </style>

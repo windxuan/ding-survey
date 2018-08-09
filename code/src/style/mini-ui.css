@@ -1,6 +1,5 @@
-.mt-range-content  {
+.mt-range-content {
   margin-right: 20px;
-  //overflow: hidden;
 }
 .mt-range-thumb {
   background-color: #fff;
@@ -18,11 +17,11 @@
 .mint-swipe-items-wrap {
   overflow: visible;
 }
-.mt-range{
-  width:90%;
+.mt-range {
+  width: 90%;
   padding-left: 20px;
 }
-.swiper-slide ul{
+.swiper-slide ul {
   margin-bottom: 40px;
 }
 .score-tips {

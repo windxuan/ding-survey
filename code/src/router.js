@@ -4,6 +4,7 @@ import store from './store';
 import utils from './utils';
 import Login from './views/admin/Login.vue';
 import Survey from './views/user/Survey.vue';
+import Loading from './views/Loading.vue';
 import Page404 from './views/Page404.vue';
 
 Vue.use(Router);
@@ -22,6 +23,11 @@ const router = new Router({
         }
         next();
       },
+    },
+    {
+      path: '/loading',
+      name: 'loading',
+      component: Loading,
     },
     {
       path: '/login',

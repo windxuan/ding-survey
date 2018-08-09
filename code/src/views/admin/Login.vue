@@ -63,7 +63,7 @@ export default {
       })
         .then((response) => {
           if (response) {
-            // console.log(response.headers.authorization);
+            console.log(response);
             // this.$store.mutations.getToken(response.headers.authorization);
             this.$store.commit('setToken', response.headers.authorization);
             this.$utils.setCache('token', response.headers.authorization);
@@ -105,7 +105,7 @@ body {
   color: #fff;
   font-weight: 300;
   height: 100%;
-  background-color: #fff;
+  background-color: #88dbe0;
 }
 body ::-webkit-input-placeholder  {
   /* WebKit */
@@ -138,7 +138,7 @@ body :-ms-input-placeholder {
     width:100%;
     max-height:100%;
     position:absolute;
-    z-index:20000;
+    z-index:1;
     left:0;
     top:0;
     background-image: url(../../assets/backend_notfound.png);
