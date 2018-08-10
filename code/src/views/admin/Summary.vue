@@ -5,28 +5,38 @@
     </div>
     <div class="realize">
     <!-- 一键切换 -->
-    <el-switch
-      v-model="switchValue"
-      @change="changeSwitch"
-      active-text="评价"
-      inactive-text="分数"
-      :disabled="disability">
-    </el-switch>
-      <!-- 查询框 -->
-    <el-input placeholder="请输入内容" v-model="search.value" class="input-with-select">
-      <el-select
-        v-model="search.select"
-        slot="prepend">
-        <el-option
-          v-for="item in search.option"
-          :key="item.id"
-          :label="item.label"
-          :value="item.value">
-        </el-option>
-      </el-select>
-      <el-button slot="append" icon="el-icon-search" @click="searchData"></el-button>
-    </el-input>
-    <el-button class="refresh" type="primary" size="small" @click="refresh" :loading="refreshLoading">刷新</el-button>
+      <el-switch
+        v-model="switchValue"
+        @change="changeSwitch"
+        active-text="评价"
+        inactive-text="分数"
+        :disabled="disability">
+      </el-switch>
+        <!-- 查询框 -->
+      <el-input placeholder="请输入内容" v-model="search.value" class="input-with-select">
+        <el-select
+          v-model="search.select"
+          slot="prepend">
+          <el-option
+            v-for="item in search.option"
+            :key="item.id"
+            :label="item.label"
+            :value="item.value">
+          </el-option>
+        </el-select>
+        <el-button slot="append" icon="el-icon-search" @click="searchData"></el-button>
+      </el-input>
+      <el-popover
+        placement="top"
+        v-model="logoutVisible">
+        <p>确定退出？</p>
+        <div style="text-align: right; margin: 0">
+          <el-button size="mini" type="text" @click="logoutVisible = false">取消</el-button>
+          <el-button type="primary" size="mini" @click="logout">确定</el-button>
+        </div>
+        <el-button class="logout" type="danger" size="small" slot="reference">退出</el-button>
+      </el-popover>
+      <el-button class="refresh" type="primary" size="small" @click="refresh" :loading="refreshLoading">刷新</el-button>
       <!-- @cell-mouse-enter="handleMouseEnter"
       @cell-mouse-leave="handleMouseOut" -->
     </div>
@@ -38,7 +48,7 @@
       height="525"
       :default-sort = "{prop: 'date', order: 'descending'}"
       ref="mainTable">
-    <el-table-column
+      <el-table-column
         label="序号"
         prop="Number"
         header-align=center
@@ -225,6 +235,7 @@ export default {
       refreshLoading: false,
       index: 1,
       dialogVisible: false,
+      logoutVisible: false,
       staffData: [],
       // 查询条件
       search: {
@@ -356,10 +367,11 @@ export default {
       console.log(index);
       this.dialogVisible = true;
       this.index = index - 1;
-    this.staffData = this.tempData[this.index];
+      this.staffData = this.tempData[this.index];
     },
     searchData() {
       this.staffCurrentPage = 1;
+      this.staffPageSize = 7;
       // console.log(this.tempData);
       console.log(this.search.value);
       this.result = [];
@@ -386,6 +398,26 @@ export default {
       this.tableData = this.result;
       this.staffTotalCount = this.tableData.length;
     },
+    logout() {
+      this.logoutVisible = false;
+      const token = '';
+      // console.log(this.$store.state.token);
+      this.setToken(token);
+      this.$store.commit('setToken', token);
+      // console.log(this.$store.state.token);
+      if (!this.$store.state.token) {
+        this.$router.push({
+          name: 'login',
+        });
+        this.$message({
+          message: '退出成功！',
+          type: 'success',
+          duration: 1500,
+        });
+      } else {
+        this.$message.error('错误！');
+      }
+    },
     ...mapMutations(['setToken']),
   },
 };
@@ -409,7 +441,12 @@ export default {
   .refresh {
     // border: 1px solid #000;
     float: right;
-    margin-right: 50px;
+    margin-right: 20px;
+    margin-top: 5px;
+  }
+  .logout {
+    float: right;
+    margin-right: 10px;
     margin-top: 5px;
   }
   .el-table td.iscenter, .el-table th.is-center {
