@@ -17,8 +17,8 @@
             </div>
             <mt-range
               ref="ranges"
-              :disabled="disable"
               v-model="questions[index].options[i].score"
+              :disabled="$utils.arrSum(questions[index].options) === 10 && activeIndex < maxIndex"
               :max="10"
               :step="1"
               :bar-height="5">
@@ -61,6 +61,7 @@ export default {
       swiper: {},
       totalScore: 0,
       once: true,
+      maxIndex: -1,
     };
   },
   created() {
@@ -82,15 +83,15 @@ export default {
     }
     // 检测答题记录缓存
     if (this.$utils.hasCache('options')) {
-      this.questions = this.$utils.getCache('options');
+      [this.questions, this.maxIndex] = this.$utils.getCache('options');
     }
   },
   beforeRouteLeave(to, from, next) {
-    this.$utils.setCache('options', this.questions);
+    this.$utils.setCache('options', [this.questions, this.maxIndex]);
     next();
   },
   destroyed() {
-    this.$utils.setCache('options', this.questions);
+    this.$utils.setCache('options', [this.questions, this.maxIndex]);
   },
   computed: {
     activeIndex() {
@@ -109,6 +110,7 @@ export default {
     // 实例化 Swiper 组件
     initSwiper() {
       this.swiper = new Swiper(this.$refs.swiper, { noSwiping: true });
+      this.swiper.slideTo(this.maxIndex, 1000, false);
     },
     // 获取问卷信息
     sendSurvey() {
@@ -129,7 +131,7 @@ export default {
     // 生成答题记录信息
     createOptions() {
       if (this.$utils.hasCache('options')) {
-        this.questions = this.$utils.getCache('options');
+        [this.questions, this.maxIndex] = this.$utils.getCache('options');
       } else {
         const arr = [];
         this.surveyData.forEach((element) => {
@@ -163,7 +165,7 @@ export default {
           duration: 2000,
         });
       } else if (this.activeIndex === 0) {
-        if (this.once) {
+        if (this.once && this.maxIndex === -1) {
           MessageBox({
             title: '提示',
             message: '点击确定后，将无法修改',
@@ -172,11 +174,19 @@ export default {
             if (msg === 'confirm') {
               this.once = false;
               this.swiper.slideNext();
+              console.log(this.activeIndex > this.maxIndex);
+              if (this.activeIndex > this.maxIndex) {
+                this.maxIndex = this.activeIndex;
+              }
             }
             return false;
           });
         } else {
           this.swiper.slideNext();
+          console.log(this.activeIndex > this.maxIndex);
+          if (this.activeIndex > this.maxIndex) {
+            this.maxIndex = this.activeIndex;
+          }
         }
       } else if (this.activeIndex === this.surveyData.length - 1) {
         MessageBox({
@@ -192,6 +202,9 @@ export default {
         });
       } else {
         this.swiper.slideNext();
+        if (this.activeIndex > this.maxIndex) {
+          this.maxIndex = this.activeIndex;
+        }
       }
     },
     // 提交问卷

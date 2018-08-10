@@ -136,6 +136,19 @@ const utils = {
     return result;
   },
 
+  /**
+   *数组对象字段求和
+   * @param {array} arrobj
+   */
+  arrSum(arrobj) {
+    let sum = 0;
+    arrobj.map((val) => {
+      sum += val.score;
+      return val;
+    });
+    return sum;
+  },
+
   // 数据处理函数
   manageData(data) {
     // console.log(data);

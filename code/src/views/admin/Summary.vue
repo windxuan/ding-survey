@@ -38,15 +38,7 @@
       height="525"
       :default-sort = "{prop: 'date', order: 'descending'}"
       ref="mainTable">
-      <!-- <el-table-column
-        prop="staffNo"
-        label="员工编号"
-        style="text-align: center;"
-        header-align=center
-        sortable
-        width="110">
-      </el-table-column> -->
-      <el-table-column
+    <el-table-column
         label="序号"
         prop="Number"
         header-align=center
@@ -63,9 +55,7 @@
         label="智多星(PL)"
         header-align=center>
         <template slot-scope="scope">
-          <!-- <i :style="{'background': $utils.tagColor('PL', scope.row[1][0].score)}"></i>
-          {{ $utils.convertScore('PL', scope.row[1][0].score) }} -->
-          <el-tag class="evalTag" :type="getType(scope.row.PL)" v-show="evalTagShow">
+         <el-tag class="evalTag" :type="getType(scope.row.PL)" v-show="evalTagShow">
             {{getEval(scope.row.PL)}}
           </el-tag>
           <el-tag class="scoreTag" :type="getType(scope.row.PL)" v-show="scoreTagShow">
@@ -252,6 +242,8 @@ export default {
         value: '',
       },
       tempData: [],
+      // 存放满足查询条件的数据
+      result: [],
     };
   },
   computed: {
@@ -269,6 +261,7 @@ export default {
     refresh() {
       this.refreshLoading = true;
       this.getData();
+      this.staffCurrentPage = 1;
     },
     getData() {
       this.tableLoading = true;
@@ -363,17 +356,36 @@ export default {
       console.log(index);
       this.dialogVisible = true;
       this.index = index - 1;
-      this.staffData = this.tableData[this.index];
+    this.staffData = this.tempData[this.index];
     },
     searchData() {
+      this.staffCurrentPage = 1;
+      // console.log(this.tempData);
       console.log(this.search.value);
+      this.result = [];
+      if (this.search.select === '1') {
+        console.log(this.search.select);
+        this.tempData.forEach((element, index) => {
+          if (element.staffName.indexOf(this.search.value) >= 0) {
+            this.result.push(this.tempData[index]);
+          }
+        });
+      } else if (this.search.select === '2') {
+        console.log(this.search.select);
+        this.tempData.forEach((element, index) => {
+          element.tags.forEach((elem) => {
+            if (elem.indexOf(this.search.value) >= 0) {
+              this.result.push(this.tempData[index]);
+            }
+          });
+        });
+      } else {
+        this.result = this.tempData;
+      }
+      console.log(this.result);
+      this.tableData = this.result;
+      this.staffTotalCount = this.tableData.length;
     },
-    // handleMouseEnter(val) {
-    //   console.log(val);
-    // },
-    // handleMouseOut(val) {
-    //   console.log(val);
-    // },
     ...mapMutations(['setToken']),
   },
 };

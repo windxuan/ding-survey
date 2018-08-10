@@ -105,7 +105,7 @@ body {
   color: #fff;
   font-weight: 300;
   height: 100%;
-  background-color: #88dbe0;
+  background-color: #fff;
 }
 body ::-webkit-input-placeholder  {
   /* WebKit */
