@@ -249,9 +249,10 @@ export default {
             label: '标签',
           },
         ],
-        select: '1',
+        select: '1', //默认为 '1'
         value: '',
       },
+      // 源数据
       tempData: [],
       // 存放满足查询条件的数据
       result: [],
@@ -369,17 +370,18 @@ export default {
       this.index = index - 1;
       this.staffData = this.tempData[this.index];
     },
+    // 查询功能
     searchData() {
-      this.staffCurrentPage = 1;
-      this.staffPageSize = 7;
-      // console.log(this.tempData);
-      console.log(this.search.value);
-      this.result = [];
+      this.staffCurrentPage = 1; //当前页
+      this.staffPageSize = 7; //每页有多少数据 比如此处默认：1页/7条
+      console.log(this.tempData); //总数据
+      console.log(this.search.value); //查询条件：为一个数组
+      this.result = []; //存放满足查询条件的数据
       if (this.search.select === '1') {
-        console.log(this.search.select);
+        console.log(this.search.select);  //查看此时用什么类型在查询
         this.tempData.forEach((element, index) => {
-          if (element.staffName.indexOf(this.search.value) >= 0) {
-            this.result.push(this.tempData[index]);
+          if (element.staffName.indexOf(this.search.value) >= 0) {  //将查询框内输入的名字与数据中的名字进行对比，有相同的字段则提取这条数据
+            this.result.push(this.tempData[index]); //将tempData中符合条件的数据依次存入result数组中
           }
         });
       } else if (this.search.select === '2') {
@@ -394,10 +396,11 @@ export default {
       } else {
         this.result = this.tempData;
       }
-      console.log(this.result);
-      this.tableData = this.result;
-      this.staffTotalCount = this.tableData.length;
+      console.log(this.result); //看一下在按照条件排列之后result中数据的呈现
+      this.tableData = this.result; //将排列后的数据放入到总数据tableData当中，使每一列的数据呈现都发生了改变
+      this.staffTotalCount = this.tableData.length; //分页栏最前方的总数据数
     },
+    // 用户登出
     logout() {
       this.logoutVisible = false;
       const token = '';
