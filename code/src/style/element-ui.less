@@ -1,0 +1,132 @@
+@import 'base/variable';
+
+.el-main {
+  padding: 0;
+  > .el-row {
+    padding: 15px;
+  }
+}
+
+.login {
+  .el-input-group__prepend {
+    color: #8ba5b2;
+    background-color: #e7f0f4;
+    border-color: #e7f0f4;
+  }
+
+  .el-input__inner {
+    background: #f2f8fb;
+    border-color: #f2f8fb;
+  }
+
+  .el-input__icon {
+    cursor: pointer;
+  }
+
+  .el-button.el-button--primary {
+    width: 100%;
+    background-color: #24aef1;
+  }
+}
+
+.survey {
+  .el-header,
+  .el-footer {
+    position: fixed;
+    width: 100%;
+    text-align: center;
+    z-index: 10;
+  }
+  .el-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 .5rem;
+    top: 0;
+    height: 2.2rem !important;
+    color: #333;
+    box-shadow: 0 3px 10px #2E353D;
+  }
+  .el-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 0;
+    height: 1rem !important;
+    background-color: darken(#2E353D, 2%);
+    box-shadow: 0 -3px 10px #2E353D;
+  }
+  .el-main {
+    margin: 2.8rem 0 .7rem;
+    color: #F6F6F6;
+    background-color: #2E353D;
+    box-sizing: border-box;
+  }
+  .el-slider {
+    display: inline-block;
+    padding: 0 0 0 .53rem;
+    box-sizing: border-box;
+  }
+  .el-slider.selected {
+    .el-slider__button,
+    .el-slider__button.el-tooltip {
+      border-color: #03D7F2 transparent transparent transparent !important;      
+    }
+  }
+  .el-slider__runway {
+    margin: 0;
+    width: 5rem;
+    background-color: #F1EDAD;
+  }
+  // 禁用状态
+  .el-slider__runway.disabled {
+    background-color: transparent;
+    .el-slider__stop {
+      width: 5px;
+      border-radius: 50%;
+      background-color: fadeout(#C0C4CC, 80%);;
+    }
+    .el-slider__button,
+    .el-slider__button.el-tooltip {
+      border-color: #CCC transparent transparent transparent;      
+    }
+  }
+  .el-slider__bar {
+    background-color: #03D7F2;
+  }
+  .el-slider__button-wrapper {
+    top: -18px;
+    width: 1.35rem;
+    height: 40px;
+    z-index: 0 !important;
+  }
+  .el-slider__button,
+  .el-slider__button.el-tooltip {
+    padding: 5px 0;
+    border-width: 7px;
+    border-style: solid;
+    border-radius: 0;
+    border-color: #F1EDAD transparent transparent transparent;
+    background-color: transparent;
+  }
+  .el-slider__stop {
+    width: 1.5px;
+    border-radius: 0;
+    background-color: #2E353D;
+  }
+  .el-button {
+    padding: .2rem .55rem;
+    color: #333;
+    background-color: #EFF03C; 
+    border-color: #EFF03C;
+    transition: background 1s;
+  }
+  .el-button.disabled {
+    color: #fff;
+    background-color: transparent;
+  }
+  .el-button.success {
+    background-color: #9FF048;
+    border-color: #9FF048;
+  }
+}

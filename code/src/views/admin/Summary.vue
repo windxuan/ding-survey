@@ -1,11 +1,8 @@
 <template>
-  <!-- 外层套一个summary为防止vue组件间的样式调整时的页面污染问题 -->
   <div class="summary">
-    <!-- pic-logo -->
     <div class="management">
       <img src="../../assets/management.png" width="100%" height="100px" alt="">
     </div>
-    <!-- 操作效果部分：1-一键切换/2-模糊查询 + 多条件查询/3-退出登录/4-刷新页面 -->
     <div class="realize">
     <!-- 一键切换 -->
       <el-switch
@@ -16,7 +13,12 @@
         :disabled="disability">
       </el-switch>
         <!-- 查询框 -->
-      <el-input placeholder="请输入内容" v-model="search.value" class="input-with-select">
+      <el-input
+        placeholder="请输入内容"
+        v-model="search.value"
+        class="input-with-select"
+        @keyup.enter.native="searchData"
+        clearable>
         <el-select
           v-model="search.select"
           slot="prepend">
@@ -60,8 +62,7 @@
       <el-table-column
         prop="staffName"
         label="姓名"
-        header-align=center
-        width="90">
+        header-align=center>
       </el-table-column>
       <el-table-column
         prop="scorePL"
@@ -172,7 +173,6 @@
           </el-tag>
         </template>
       </el-table-column>
-      <!-- 答题时间 -->
       <el-table-column
         label="答题时间"
         prop="createTime"
@@ -182,7 +182,6 @@
           <span class="nowrap">{{ $utils.goodTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
-      <!-- 详情按钮 -->
       <el-table-column
         label="详情"
         header-align=center>
@@ -191,26 +190,36 @@
         </template>
       </el-table-column>
     </el-table>
-    <!-- 详情弹窗 -->
     <el-dialog
       title="详情"
       :visible.sync="dialogVisible"
-      width="30%">
-      <span>员工编号：{{staffData.staffNo}}</span><br>
-      <span>手机号：{{staffData.mobile}}</span><br>
-      <span>总评：</span>
-      <el-tag v-for="tag in staffData.tags" v-bind:key="tag" style="width: 75px;text-align: center;">
-        {{tag}}
-      </el-tag><br>
-      <span>问卷名：{{staffData.surveyName}}</span><br>
-      <span>测试能力：{{staffData.surveyShow}}</span><br>
-      <span>测试类型：{{staffData.surveyType}}</span><br>
+      width="28%">
+      <el-form :label-position="labelPosition" label-width="80px">
+        <el-form-item label="员工编号">
+          {{staffData.staffNo}}
+        </el-form-item>
+        <el-form-item label="手机号">
+          {{staffData.mobile}}
+        </el-form-item>
+        <el-form-item label="总评">
+          <el-tag v-for="tag in staffData.tags" v-bind:key="tag" style="width: 75px;text-align: center;">
+          {{tag}}
+          </el-tag>
+        </el-form-item>
+        <el-form-item label="问卷名">
+          《{{staffData.surveyName}}》
+        </el-form-item>
+        <el-form-item label="测试能力">
+          {{staffData.surveyShow}}
+        </el-form-item>
+        <el-form-item label="测试类型">
+          {{staffData.surveyType}}
+        </el-form-item>
+      </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
       </span>
     </el-dialog>
-
-    <!-- 分页 -->
     <el-pagination
       background
       @size-change="handleSizeChange"
@@ -232,19 +241,20 @@ export default {
   data() {
     return {
       switchValue: true,
-      disability: false, // 一键切换按钮
-      tableData: [],
+      disability: false,
+      tableData: [],      //列表渲染数据
       tableLoading: true,
-      staffPageSize: 7,
-      staffCurrentPage: 1,
-      staffTotalCount: 0,
-      evalTagShow: true, // 标签显示状态
-      scoreTagShow: false, // 分数显示状态
+      staffPageSize: 7,   //每页多少调数据
+      staffCurrentPage: 1,  //默认数据从第一页开始
+      staffTotalCount: 0, 
+      evalTagShow: true,  //一键切换中的标签展示
+      scoreTagShow: false,  //一键切换中的分值展示
       refreshLoading: false,
       index: 1,
-      dialogVisible: false,
-      logoutVisible: false,
+      dialogVisible: false, //详细按钮：弹出框
+      logoutVisible: false, //是否登出
       staffData: [],
+      labelPosition: 'left',
       // 查询条件
       search: {
         option: [
@@ -257,10 +267,9 @@ export default {
             label: '标签',
           },
         ],
-        select: '1', // 默认为 '1'
+        select: '1',
         value: '',
       },
-      // 源数据
       tempData: [],
       // 存放满足查询条件的数据
       result: [],
@@ -278,12 +287,12 @@ export default {
     }
   },
   methods: {
-    refresh() {
+    refresh() { // 刷新函数
       this.refreshLoading = true;
       this.getData();
       this.staffCurrentPage = 1;
     },
-    getData() {
+    getData() { // 数据获取函数
       this.tableLoading = true;
       this.$http.get('summary', {
         headers: {
@@ -292,14 +301,14 @@ export default {
       })
         .then((response) => {
           if (response) {
-            console.log(response);
+            // console.log(response);
             this.pushData(response);
             this.tableLoading = false;
             this.refreshLoading = false;
           }
         })
         .catch((error) => {
-          console.log(error);
+          // console.log(error);
           if (error.response.data.message) {
             this.$message.error(error.response.data.message);
           } else {
@@ -308,11 +317,11 @@ export default {
           }
         });
     },
-    pushData(data) {
+    pushData(data) { // 数据渲染函数
       this.tableData.splice(0, this.tableData.length);
       this.tableData = this.$utils.manageData(data);
       this.tempData = this.tableData;
-      console.log(this.tableData);
+      // console.log(this.tableData);
       this.staffTotalCount = data.length;
     },
     handleSizeChange(val) { // 改变每页显示条数
@@ -321,7 +330,7 @@ export default {
     handleCurrentChange(val) { // 改变当前页码
       this.staffCurrentPage = val;
     },
-    getEval(level) {
+    getEval(level) { // 获取评价
       if (level === 3) {
         return '优秀';
       }
@@ -336,27 +345,27 @@ export default {
       }
       return '暂无';
     },
-    getType(level) {
-      if (level === 3) { // 优秀
+    getType(level) { // 获取标签类型
+      if (level === 3) {
         return 'primary';
       }
-      if (level === 2) { // 自然
+      if (level === 2) {
         return 'success';
       }
-      if (level === 1) { // 次要
+      if (level === 1) {
         return 'warning';
       }
-      if (level === 0) { // 避免
+      if (level === 0) {
         return 'danger';
       }
       return 'info';
     },
-    changeSwitch(state) { // 一键切换
-      this.disability = true; // 点击时由false == true ： 转换状态
-      console.log(state);
-      if (state === false) { // 注意 ： 在任何对比之时，都要使用 === 而不是 ==
+    changeSwitch(state) { // 切换显示分数或评价
+      this.disability = true;
+      // console.log(state);
+      if (state === false) {
         this.evalTagShow = false;
-        setTimeout(() => { // 加上setTimeout方法，解决一键切换时默认样式卡顿问题
+        setTimeout(() => {    //添加setTimeout使时间延长，解决一键切换数据时，速度过快的样式冲突问题
           this.scoreTagShow = true;
           if (this.scoreTagShow === true) {
             this.disability = false;
@@ -364,7 +373,7 @@ export default {
         }, 390);
       } else {
         this.scoreTagShow = false;
-        setTimeout(() => { // 加上setTimeout方法，解决一键切换时默认样式卡顿问题
+        setTimeout(() => {
           this.evalTagShow = true;
           if (this.evalTagShow === true) {
             this.disability = false;
@@ -372,62 +381,73 @@ export default {
         }, 390);
       }
     },
-    getDetails(index) {
-      console.log(index);
-      this.dialogVisible = true; // 显示弹框
+    getDetails(index) { // 详情函数
+      // console.log(index);
+      this.dialogVisible = true;
       this.index = index - 1;
       this.staffData = this.tempData[this.index];
     },
-    // 查询功能
-    searchData() {
-      this.staffCurrentPage = 1; // 当前页
-      this.staffPageSize = 7; // 每页有多少数据 比如此处默认：1页/7条
-      console.log(this.tempData); // 总数据
-      console.log(this.search.value); // 查询条件：为一个数组
-      this.result = []; // 存放满足查询条件的数据
-      if (this.search.select === '1') {
-        console.log(this.search.select); // 查看此时用什么类型在查询
-        this.tempData.forEach((element, index) => {
-          if (element.staffName.indexOf(this.search.value) >= 0) { // 将查询框内输入的名字与数据中的名字进行对比，有相同的字段则提取这条数据
-            this.result.push(this.tempData[index]); // 将tempData中符合条件的数据依次存入result数组中
+    searchData() { // 搜索函数
+      this.staffCurrentPage = 1;  //搜索的第几页
+      this.staffPageSize = 7;     //每一页有多少条数据、默认为7条 //初始样式为7条
+      // console.log(this.tempData);
+      // console.log(this.search.value);
+      this.result = [];           //利用一个空数组，用来存放筛选后的数据
+      if (this.search.select === '1') {   //当搜索条件为第一个时
+        // console.log(this.search.select);
+        this.tempData.forEach((element, index) => {   //forEach遍历源数据tempData:然后开始按条件进行筛选，将筛选条件满足的数据放入 result
+          if (element.staffName.indexOf(this.search.value) >= 0) {  //if 判断进入筛选条件 indexOf(匹配所有只要有一个为相同的元素)
+            this.result.push(this.tempData[index]);     //将对应源数据里的数据按下标 index 传回来 放入空数组 result 之中
           }
         });
-      } else if (this.search.select === '2') {
-        console.log(this.search.select); // 如果查询条件改变：此时为标签查询
-        this.tempData.forEach((element, index) => { // 一样的：首先遍历源数据
-          element.tags.forEach((elem) => { // 由于一个人会有多条标签：则需要将标签遍历————拆成一个一个的单个标签
-            if (elem.indexOf(this.search.value) >= 0) { // elem为单条标签：与输入框中所有的数据标签逐一进行比对
-              this.result.push(this.tempData[index]); // 若满足条件，将符合条件的数据依次存入result数组中
+      } else if (this.search.select === '2') {  //当搜索条件为第二个时
+        // console.log(this.search.select);
+        this.tempData.forEach((element, index) => {  //遍历源数据项
+          element.tags.forEach((elem) => {           //由于按标签的数据有多项，因此需要将标签分为一个一个的，来进行条件查询
+            if (elem.indexOf(this.search.value) >= 0) { //如果标签有一项相同
+              this.result.push(this.tempData[index]);   //则将对应源数据里的数据按下标 index 放入空数组之中
             }
           });
         });
-      } else { // 若没有查询条件：则不变
-        this.result = this.tempData;
-      }
-      console.log(this.result); // 看一下在按照条件排列之后result中数据的呈现
-      this.tableData = this.result; // 将排列后的数据放入到总数据tableData当中，使每一列的数据呈现都发生了改变
-      this.staffTotalCount = this.tableData.length; // 分页栏最前方的总数据数：即,一共有多少条数据？
-    },
-    // 用户登出
-    logout() {
-      this.logoutVisible = false; // 是否登出： 给一个状态
-      const token = '';
-      // console.log(this.$store.state.token);
-      this.setToken(token);
-      this.$store.commit('setToken', token);
-      // console.log(this.$store.state.token);
-      if (!this.$store.state.token) {
-        this.$router.push({
-          name: 'login',
-        });
-        this.$message({
-          message: '退出成功！',
-          type: 'success',
-          duration: 1500,
-        });
       } else {
-        this.$message.error('错误！');
+        this.result = this.tempData;    //如若没有进行条件查询 则将数据直接原封不动的报出去
       }
+      // console.log(this.result);  //在控制台里查看数据项
+      this.tableData = this.result; //根据条件查询数据重新排列好之后，改变每一行每一项的具体数据
+      this.staffTotalCount = this.tableData.length; //分页栏里的数据数据：一共有多少调数据
+    },
+    logout() { // 退出函数
+      this.logoutVisible = false;  //只要是涉及到登陆与退出的: 都需要给一个状态，true表示成功 false表示失败
+      this.$http.delete('logout', { 
+        headers: {
+          Authorization: this.$store.state.token,
+        },
+      })
+        .then((response) => {
+          if (response) {
+            this.$message({
+              message: response.data.message,
+              type: 'success',
+              duration: 1500,
+            });
+            const token = '';
+            localStorage.TOKEN = token;
+            this.setToken(token);
+            this.$store.commit('setToken', token);
+            this.$router.push({
+              name: 'login',
+            });
+          }
+        })
+        .catch((error) => {
+          // console.log(error);
+          if (error.response.data.message) {
+            this.$message.error(error.response.data.message);
+          } else {
+            this.$message.error('服务器连接错误！');
+            this.refreshLoading = false;
+          }
+        });
     },
     ...mapMutations(['setToken']),
   },
@@ -461,20 +481,20 @@ export default {
     margin-top: 5px;
   }
   .el-table td.iscenter, .el-table th.is-center {
-    background: #74cfd5;
-    color: #191a1b;
+    background: #f0fbff;
+    color: #636262;
   }
   .el-switch {
     // border: 1px solid #000;
     height: 40px;
-    margin-left: 15px;
+    margin-left: 80px;
   }
-  .el-pagination button, .el-pagination span:not([class*=suffix]) {
-    color: #fff;
-  }
+  // .el-pagination button, .el-pagination span:not([class*=suffix]) {
+  //   color: #fff;
+  // }
   .el-input-group {
     margin-bottom: 5px;
-    margin-left: 20px;
+    margin-left: 35px;
   }
   .el-dialog__body {
     line-height: 25px;
@@ -486,7 +506,7 @@ export default {
     margin: 0 auto;
   }
   .el-pagination {
-    margin-top: 20px;
+    // margin-top: 20px;
     // border: 1px solid #000;
     line-height: 32px;
     white-space: nowrap;
@@ -494,12 +514,15 @@ export default {
     color: #303133;
     font-weight: 700;
     text-align: center;
-    background: #88dbe0;
+    background: #a3eaee;
   }
   .el-select .el-input {
     width: 100px;
   }
   .input-with-select {
     width: 400px;
+  }
+  .el-form-item {
+    margin-bottom: 0px;
   }
 </style>

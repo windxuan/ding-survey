@@ -48,8 +48,8 @@ export default {
   data() {
     return {
       form: {
-        username: 'admin',
-        password: '123',
+        username: '',
+        password: '',
       },
       loading: false,
     };
@@ -63,7 +63,7 @@ export default {
       })
         .then((response) => {
           if (response) {
-            console.log(response);
+            // console.log(response);
             // this.$store.mutations.getToken(response.headers.authorization);
             this.$store.commit('setToken', response.headers.authorization);
             this.$utils.setCache('token', response.headers.authorization);
@@ -86,7 +86,7 @@ export default {
         .catch((error) => {
           this.loading = false;
           // 请求失败页面弹出失败框
-          console.log(error.response.data);
+          // console.log(error.response.data);
           // console.log(error.response.status);
           if (error.response.data.message) {
             this.$message.error(error.response.data.message);

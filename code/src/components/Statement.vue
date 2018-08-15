@@ -10,10 +10,10 @@
           <li>你可以自由分配这10分，你认为哪一项越能反映你的行为或感受，就给这一项一个较高的分数；这10分既可以分别打给几项，也可以只打到一项上。</li>
           <li><span class="import">注意：每一部分的总分必须是10分。</span></li>
         </ul>
-        <mt-button
+        <el-button
           type="primary"
           class="zhezhao-button"
-          @click="flag = !flag">我已阅读，开始答题</mt-button>
+          @click="flag = !flag">我已阅读，开始答题</el-button>
       </div>
     </div>
   </div>
@@ -51,7 +51,7 @@ export default {
       z-index: 21;
       color: #000;
       p{
-        font-size: 1.5rem;
+        font-size: .32rem;
         text-align: center;
       }
       .zhezhao-text{
@@ -59,14 +59,16 @@ export default {
         margin: 0 auto;
         li{
           margin-top: 15px;
-          text-indent: 2em;
-          font-size: 1rem;
+          text-indent: .36rem;
+          font-size: .36rem;
         }
       }
       .zhezhao-button{
         height: 30px;
         display: block;
         margin: 20px auto;
+        text-align: center;
+        background-color: #6580F3;
       }
     }
   }

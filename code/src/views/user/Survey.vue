@@ -1,228 +1,283 @@
 <template>
-  <div class="survey swiper-container swiper-no-swiping" ref="swiper">
-    <!-- 答题说明组件 -->
-    <statement></statement>
-    <div class="top-room">
-      <h2>{{$utils.digitDX(activeIndex + 1) + '. ' + surveyData[activeIndex].questionName}}</h2>
-      <div class="banner">已分配的分数：{{ scoreSum }}分</div>
-    </div>
-    <!-- 主要答题界面内容 -->
-    <div class="swiper-wrapper">
-      <div class="swiper-slide swiper-no-swiping" v-for="(value, index) in surveyData" :key="index">
-        <ul>
-          <li v-for="(v, i) in value.options" :key="i">
-            <div class="center-title-wrap">
-              <span class="center-title">{{i + 1}}、</span>
-              <span class="center-title-two">{{v.optionName}}</span>
+  <el-container class="survey">
+    <Statement/>
+    <el-header class="banner flex-block">
+      <div class="flex-inline">
+        {{ `${$utils.digitDX(activeIndex + 1)}、` }}
+        <span class="flex-item ">{{ activeTopic }}</span>
+      </div>
+    </el-header>
+    <el-main>
+      <ProgressHint :data="activeSum"/>
+      <div
+        ref="swiper"
+        class="swiper-container swiper-no-swiping">
+        <div class="swiper-wrapper">
+          <div
+            class="swiper-slide"
+            v-for="(value, index) in topicData"
+            :key="index">
+            <div
+              class="item"
+              v-for="(v, i) in value.options"
+              :key="i">
+              <p class="topic">
+                <span class="prefix">{{ `${$utils.toLetter(i + 1)} . ` }}</span>
+                <span class="elastic">{{ v.optionName }}</span>
+              </p>
+              <p class="option">
+                <span class="elastic">
+                  <el-slider
+                    v-model="answerData[index].options[i].score"
+                    :class="{'selected': answerData[index].options[i].score > 0}"
+                    show-stops
+                    :max="10"
+                    :step="1"
+                    :disabled="disabled"
+                    :show-tooltip="false">
+                  </el-slider>
+                </span>
+                <span class="focus-box">{{ answerData[index].options[i].score }}</span>
+              </p>
             </div>
-            <mt-range
-              ref="ranges"
-              v-model="questions[index].options[i].score"
-              :disabled="$utils.arrSum(questions[index].options) === 10 && activeIndex < maxIndex"
-              :max="10"
-              :step="1"
-              :bar-height="5">
-              <div class="range-end" slot="end">
-                <span>{{ questions[index].options[i].score }}</span>
-                <div class="na1"></div>
-                <div class="na2"></div>
-                <div class="na3"></div>
-                <div class="na4"></div>
-              </div>
-            </mt-range>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
-    </div>
-    <!-- 底部内容 -->
-    <mt-tabbar fixed>
-      <div class="botton">
-        <mt-button :disabled="activeIndex === 0" class="eida" @touchend="prev" @click="prev">上一题</mt-button>
-        <span>{{ activeIndex + 1 }} / {{ surveyData.length }} </span>
-        <mt-button class="eida" @touchend="next" @click="next">下一题</mt-button>
-      </div>
-    </mt-tabbar>
-  </div>
+    </el-main>
+    <el-footer>
+      <el-button
+        :class="{'disabled': activeIndex === 0}"
+        @touchend.native.prevent="prev">上一题
+      </el-button>
+      <span class="progress">{{ `${activeIndex + 1} / ${len}` }}</span>
+      <el-popover
+        placement="top-end"
+        width="200"
+        v-model="hint"
+        trigger="manual">
+        <p>每道题答完后不允许修改,</p>
+        <p>请知悉</p>
+        <div style="text-align: right; margin: 0">
+          <el-button
+            size="mini"
+            type="text"
+            @touchend.native.prevent="hint = false">等等</el-button>
+          <el-button
+            type="primary"
+            size="mini"
+            @touchend.native.prevent="activeIndex++">知道了</el-button>
+        </div>
+        <el-button
+          v-if="activeIndex !== len - 1"
+          slot="reference"
+          @touchend.native.prevent="next">下一题
+        </el-button>
+        <el-button
+          v-if="activeIndex === len - 1"
+          slot="reference"
+          :class="{'success': activeSum === 10}"
+          @touchend.native.prevent="submitSurvey">提交
+        </el-button>
+      </el-popover>
+    </el-footer>
+  </el-container>
 </template>
 
 <script>
 import Swiper from 'swiper';
-import { MessageBox, Toast, Indicator } from 'mint-ui';
-import statement from '../../components/Statement';
+import ProgressHint from '@/components/ProgressHint';
+import Statement from '@/components/Statement';
 
 export default {
   name: 'Survey',
-  components: { statement },
+  components: {
+    ProgressHint,
+    Statement,
+  },
   data() {
     return {
-      disable: false,
-      surveyData: [{ questionName: '' }],
-      questions: [{ options: [{ score: 0 }] }],
-      swiper: {},
-      totalScore: 0,
+      activeIndex: 0,
+      maxIndex: 0,
+      code: '',
+      userData: [],
+      topicData: [],
+      answerData: [],
+      hint: false,
       once: true,
-      maxIndex: -1,
     };
   },
-  created() {
-    // 检测问卷题目缓存
-    if (this.$utils.hasCache('survey')) {
-      new Promise((success) => {
-        const data = this.$utils.getCache('survey');
-        if (data.length > 1) {
-          success(data);
-        }
-      }).then((data) => {
-        this.surveyData = data;
-        this.createOptions();
-      }).then(() => {
-        this.initSwiper();
-      });
-    } else {
-      this.sendSurvey();
-    }
-    // 检测答题记录缓存
-    if (this.$utils.hasCache('options')) {
-      [this.questions, this.maxIndex] = this.$utils.getCache('options');
-    }
-  },
-  beforeRouteLeave(to, from, next) {
-    this.$utils.setCache('options', [this.questions, this.maxIndex]);
-    next();
-  },
-  destroyed() {
-    this.$utils.setCache('options', [this.questions, this.maxIndex]);
-  },
   computed: {
+    activeTopic() {
+      if (this.len === 0) {
+        return 'Topic Loading...';
+      }
+      return this.topicData[this.activeIndex].questionName;
+    },
+    activeSum() {
+      if (this.answerData.length === 0) {
+        return 0;
+      }
+      return this.$utils.arrSum(this.answerData[this.activeIndex].options);
+    },
+    disabled() {
+      return this.activeIndex < this.maxIndex;
+    },
+    len() {
+      return this.topicData.length;
+    },
+  },
+  watch: {
     activeIndex() {
-      return this.swiper.realIndex || 0;
+      this.hint = false;
+      this.maxIndex = Math.max(this.maxIndex, this.activeIndex);
+      this.swiper.slideTo(this.activeIndex, 500, false);
+      this.$nextTick(() => window.scrollTo(0, 0));
     },
-    scoreSum() {
-      let sum = 0;
-      this.questions[this.activeIndex].options.map((val) => {
-        sum += val.score;
-        return sum;
-      });
-      return sum;
+    maxIndex() {
+      if (this.maxIndex === this.len - 1) {
+        this.$dd.setRight('提交', () => {
+          this.submitSurvey();
+        });
+      }
     },
+  },
+  beforeRouteEnter(to, from, next) {
+    next((vm) => {
+      vm.$dd.setRight();
+    });
+  },
+  created() {
+    this.getUser();
+    // 检测读取缓存(用户、题目、记录)
+    const caches = ['user', 'topic', 'answer'];
+    let isAnswer = true;
+    caches.map((val) => {
+      if (this.$utils.hasCache(val)) {
+        const date = this.$utils.getCache(val);
+        console.log(date);
+        if (val === 'user' && this.$utils.hasFields(date, 'grades')) {
+          this.$router.push({ name: 'verdict' });
+        }
+        if (val === 'answer') {
+          [this.maxIndex, this[`${val}Data`]] = date;
+        } else {
+          this[`${val}Data`] = date;
+        }
+        return date;
+      }
+      if (val === 'topic' && !this.$utils.hasCache(val)) {
+        isAnswer = false;
+        this.getTopic(() => {
+          this.getAnswer();
+        });
+      } else if (isAnswer) {
+        this[`get${val.substr(0, 1).toUpperCase() + val.substr(1)}`]();
+      }
+      return false;
+    });
+  },
+  mounted() {
+    this.swiper = new Swiper(this.$refs.swiper, {
+      noSwiping: true,
+    });
   },
   methods: {
-    // 实例化 Swiper 组件
-    initSwiper() {
-      this.swiper = new Swiper(this.$refs.swiper, { noSwiping: true });
-      this.swiper.slideTo(this.maxIndex, 1000, false);
+    // 获取用户信息
+    getUser() {
+      if (this.$dd.version) {
+        this.$dd.getAuthCode((code) => {
+          this.$dd.alert({ message: `code: ${code}` });
+          this.$http.get('getUserInfo', {
+            params: { code },
+          })
+            .then((result) => {
+              this.$dd.alert({ message: JSON.stringify(result.data) });
+              this.userData = result.data;
+              this.$utils.setCache('user', this.userData);
+              if (this.$utils.hasFields(this.userData, 'grades')) {
+                this.$router.push({ name: 'verdict' });
+              }
+            })
+            .catch((error) => { console.log(error); });
+        });
+      }
     },
-    // 获取问卷信息
-    sendSurvey() {
+    // 获取问卷题目
+    getTopic(callback) {
       this.$http.get('survey')
         .then((result) => {
-          this.surveyData = result.data.questions;
-          this.createOptions();
-          this.initSwiper();
-          this.$utils.setCache('survey', this.surveyData);
+          this.topicData = result.data.questions;
+          this.$utils.setCache('topic', this.topicData);
+          return callback && callback();
         })
         .then(() => {
-          this.initSwiper();
+          this.swiper = new Swiper(this.$refs.swiper, {
+            noSwiping: true,
+          });
         })
         .catch((error) => {
           console.log(error);
         });
     },
-    // 生成答题记录信息
-    createOptions() {
-      if (this.$utils.hasCache('options')) {
-        [this.questions, this.maxIndex] = this.$utils.getCache('options');
-      } else {
-        const arr = [];
-        this.surveyData.forEach((element) => {
-          const item = {};
-          this.$set(item, 'id', element.id);
-          this.$set(item, 'options', []);
-          element.options.forEach((el, i) => {
-            const opts = {};
-            this.$set(opts, 'id', i + 1);
-            this.$set(opts, 'codeId', el.codeId);
-            this.$set(opts, 'score', 0);
-            item.options.push(opts);
-          });
-          arr.push(item);
+    // 获取答题记录
+    getAnswer() {
+      console.log('getAnswer');
+      const record = [];
+      this.topicData.forEach((element) => {
+        const item = {};
+        this.$set(item, 'id', element.id);
+        this.$set(item, 'options', []);
+        element.options.forEach((el, i) => {
+          const opts = {};
+          this.$set(opts, 'id', i + 1);
+          this.$set(opts, 'codeId', el.codeId);
+          this.$set(opts, 'score', 0);
+          item.options.push(opts);
         });
-        this.questions = arr;
-      }
+        record.push(item);
+      });
+      this.answerData = record;
     },
     prev() {
-      if (this.scoreSum === 10) {
-        this.$refs.ranges.slice(0, 10 * this.activeIndex + 9).disabled = true;
-      }
-      this.swiper.slidePrev();
+      return this.activeIndex !== 0 && this.activeIndex--;
     },
     next() {
-      if (this.scoreSum !== 10) {
-        Toast({
-          message: '总分必须为10分哦',
-          className: 'score-tips',
-          position: 'center',
-          duration: 2000,
-        });
-      } else if (this.activeIndex === 0) {
-        if (this.once && this.maxIndex === -1) {
-          MessageBox({
-            title: '提示',
-            message: '点击确定后，将无法修改',
-            showCancelButton: true,
-          }).then((msg) => {
-            if (msg === 'confirm') {
-              this.once = false;
-              this.swiper.slideNext();
-              console.log(this.activeIndex > this.maxIndex);
-              if (this.activeIndex > this.maxIndex) {
-                this.maxIndex = this.activeIndex;
-              }
-            }
-            return false;
-          });
-        } else {
-          this.swiper.slideNext();
-          console.log(this.activeIndex > this.maxIndex);
-          if (this.activeIndex > this.maxIndex) {
-            this.maxIndex = this.activeIndex;
-          }
+      if (this.activeSum === 10) {
+        this.hint = this.maxIndex === 0;
+        if (!this.hint && this.activeIndex !== this.len - 1) {
+          this.activeIndex++;
         }
-      } else if (this.activeIndex === this.surveyData.length - 1) {
-        MessageBox({
-          title: '提示',
-          message: '已答完,确定提交？',
-          showCancelButton: true,
-        }).then((msg) => {
-          if (msg === 'confirm') {
-            Indicator.open();
-            this.submitSurvey();
-          }
-          return false;
-        });
       } else {
-        this.swiper.slideNext();
-        if (this.activeIndex > this.maxIndex) {
-          this.maxIndex = this.activeIndex;
-        }
+        this.$dd.vibration(100);
       }
     },
-    // 提交问卷
     submitSurvey() {
+      const end = this.$utils.arrSum(this.answerData[this.maxIndex].options);
+      if (end === 10) {
+        this.$dd.confirm({ message: '确定提交问卷？' }, index => index === 1 && this.sendSubmit());
+      } else {
+        this.$dd.vibration(100);
+      }
+    },
+    sendSubmit() {
       const answer = {};
-      this.$set(answer, 'staff', {});
-      this.$set(answer, 'questions', this.questions);
-      this.$set(answer.staff, 'staffName', '小彩蛋');
-      this.$set(answer.staff, 'staffNo', this.$utils.randomSum(9));
-      this.$set(answer.staff, 'mobliePhone', '12377778888');
+      this.$set(answer, 'staff', this.userData);
+      this.$set(answer, 'questions', this.answerData);
       this.$http.post('survey', answer)
         .then((result) => {
-          console.log(result);
-          this.$router.push({
-            name: 'verdict',
-            params: result.data,
+          this.$utils.setCache('user', result.data);
+          this.$dd.confirm({
+            title: '提交问卷返回数据',
+            message: JSON.stringify(result.data),
+            buttonLabels: ['取消', '跳转'],
+          }, (index) => {
+            if (index === 1) {
+              this.$router.push({
+                name: 'verdict',
+                params: result.data,
+              });
+            }
           });
-          Indicator.close();
         })
         .catch((error) => {
           console.log(error);
@@ -233,138 +288,46 @@ export default {
 </script>
 
 <style scoped lang="less">
-  .center-title-wrap{
-    position: relative;
-  }
-  .center-title {
-    line-height: 30px;
-    position: absolute;
-    text-align: center;
-    top: 4px;
-    left: 0;
-  }
-  .center-title-two{
-    width: 82%;
-    display: inline-block;
-    padding-top: 5px;
-    padding-left: 1.5em;
-    line-height: 30px;
-    letter-spacing: 3px;
-  }
   .survey {
-    display: block;
-    height: 100%;
-    color: #fff;
-    background: #3B4148;
-    .mint-swipe {
-      height: 100%;
-      overflow: visible;
-    }
-  }
-  .range-end {
-    margin-left: 10px;
-    width: 25px;
-    height: 25px;
-    position: relative;
-    span {
-      display: block;
-      width: 100%;
-      height: 100%;
-      text-align: center;
-      line-height: 25px;
-    }
-    .na1{
-      position: absolute;
-      top: 0;
-      left: 0;
-      border-top: 1px solid #53E2F0;
-      border-left: 1px solid #53E2F0;
-    }
-    .na2{
-      position: absolute;
-      top: 0;
-      right: 0;
-      border-top: 1px solid #53E2F0;
-      border-right: 1px solid #53E2F0;
-    }
-    .na3{
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      border-bottom: 1px solid #53E2F0;
-      border-left: 1px solid #53E2F0;
-    }
-    .na4{
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      border-bottom: 1px solid #53E2F0;
-      border-right: 1px solid #53E2F0;
-    }
-  }
-  .na1,.na2,.na3,.na4{
-    width: 6px;
-    height: 6px;
-  }
-  .top-room{
-    position: fixed;
-    width: 100%;
-    height: 22%;
-    background-image: url("../../assets/new01.png");
-    background-size: 100% 100%;
-    z-index: 10;
-    text-align: center;
-    h2{
-      width: 100%;
-      color: #000;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translateX(-50%) translateY(-50%);
-      font-size: 1.3rem;
-    }
-  }
-  .banner{
-    width: 200px;
-    height: 30px;
-    background-image: url("../../assets/banner.png");
-    background-size: 100% 100%;
-    position: absolute;
-    top: 75%;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    line-height: 30px;
-    color: #f00;
-  }
-  .survey-box{
-    border: 3px solid #f00;
-    height: 800px;
-    background: #3B4148;
-  }
-  .swiper-wrapper{
-    padding: 0 15px;
-    background-color:#3B4148 ;
-    ul{
-      margin-top:50%;
-      padding-bottom: 30px;
-      overflow: hidden;
-    }
-  }
-  .botton {
-    width: 100%;
     background-color: #2E353D;
-    height: 50px;
-    span{
-      color: #fff;
-      padding: 0 30px;
+  }
+  .swiper-slide {
+    user-select: none;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+  .banner {
+    background: rgba(46, 53, 61, .7) url('/img/banner.png') 50% 50% no-repeat;
+    background-size: 100%100%;
+  }
+  .item {
+    line-height: .5rem;
+    > p {
+      display: flex;
+      box-sizing: border-box;
+    }
+    .elastic {
+      flex: 1;
+    }
+    .topic {
+      .prefix {
+        width: .5rem;
+        text-align: left;
+      }
+    }
+    .option {
+      .elastic {
+        line-height: .64rem;
+        height: .72rem;
+      }
     }
   }
-  .eida{
-    background-color: #EFF03C;
-    color: #000;
-    width: 80px;
-    height: 35px;
-    margin-top: 7px;
+  .progress {
+    margin: 0 .7rem;
+    color: #fff;
+  }
+  .mt-popup {
+    color: #fff;
+    background-color: rgba(0, 0, 0, .5);
   }
 </style>

@@ -1,12 +1,7 @@
-// 引入组件
 import Vue from 'vue';
-import MintUI from 'mint-ui';
 import ElementUI from 'element-ui';
-import * as Ding from 'dingtalk-jsapi';
 
-// 引入静态资源
-import 'mint-ui/lib/style.css';
-import 'element-ui/lib/theme-chalk/base.css';
+// 静态资源引入
 import 'element-ui/lib/theme-chalk/index.css';
 import 'element-ui/lib/theme-chalk/display.css';
 import 'swiper/dist/css/swiper.min.css';
@@ -15,17 +10,17 @@ import 'swiper/dist/css/swiper.min.css';
 import App from './App.vue';
 import router from './router';
 import store from './store';
-import utils from './utils';
-import http from './http';
+import http from './plugin/http';
+import utils from './plugin/utils';
+import dd from './plugin/dingtalk';
 
 // 组件化
-Vue.use(MintUI);
 Vue.use(ElementUI);
 
 // 全局绑定
 Vue.prototype.$http = http;
 Vue.prototype.$utils = utils;
-Vue.prototype.$dd = Ding;
+Vue.prototype.$dd = dd;
 
 // 关闭消息提示
 Vue.config.productionTip = false;
