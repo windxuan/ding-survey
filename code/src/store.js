@@ -17,7 +17,7 @@ export default new Vuex.Store({
     loginStatus: state => state.token,
   },
   mutations: {
-    // 获取 token
+    // 获取 token: 此处获取到token的数据
     setToken(state, token) {
       state.token = token;
     },
